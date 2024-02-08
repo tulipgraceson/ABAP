@@ -1,0 +1,98 @@
+REPORT zsalesbuttonasg_tul.
+
+TYPES: BEGIN OF ty_vbak,
+         vbeln TYPE char10,
+         erdat TYPE datum,
+         ernam TYPE char12,
+       END OF ty_vbak.
+DATA: itab1 TYPE TABLE OF ty_vbak,
+      wa1   TYPE ty_vbak.
+
+TYPES: BEGIN OF ty_vbap,
+         vbeln TYPE char10,
+         posnr TYPE char6,
+         matnr TYPE char40,
+         arktx TYPE char40,
+         netwr TYPE wertv8,
+       END OF ty_vbap.
+DATA: itab2 TYPE TABLE OF ty_vbap,
+      wa2   TYPE ty_vbap.
+
+TYPES: BEGIN OF ty_vbpa,
+         vbeln TYPE char10,
+         posnr TYPE char6,
+         parvw TYPE char2,
+       END OF ty_vbpa.
+
+DATA: itab3 TYPE TABLE OF ty_vbpa,
+      wa3   TYPE ty_vbpa.
+
+TYPES: BEGIN OF ty_sale,
+         vbeln TYPE char10,
+         erdat TYPE datum,
+         ernam TYPE char12,
+         posnr TYPE char6,
+         matnr TYPE char40,
+         arktx TYPE char40,
+         netwr TYPE wertv8,
+         parvw TYPE char2,
+       END OF ty_sale.
+DATA: itab4 TYPE TABLE OF ty_sale,
+      wa4   TYPE ty_sale.
+
+SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME.
+  TABLES vbap.
+  select-options orderid for vbap-vbeln.
+
+  PARAMETERS:
+    r1 RADIOBUTTON GROUP rad1 DEFAULT 'X',
+    r2 radiobutton group rad1.
+
+SELECTION-SCREEN END OF BLOCK b1.
+
+  SELECT vbeln posnr matnr arktx netwr FROM vbap INTO TABLE itab2 where vbeln in orderid.
+
+  SELECT vbeln erdat ernam FROM vbak INTO TABLE itab1
+    FOR ALL ENTRIES IN itab2
+    WHERE vbeln = itab2-vbeln.
+
+  SELECT vbeln posnr parvw FROM vbpa INTO TABLE itab3
+    FOR ALL ENTRIES IN itab2
+    WHERE vbeln = itab2-vbeln.
+
+  LOOP AT itab2 into wa2.
+    READ TABLE itab1 into wa1 WITH KEY vbeln = wa2-vbeln.
+
+    READ TABLE itab3 into wa3 WITH KEY vbeln = wa2-vbeln.
+
+    wa4-vbeln = wa1-vbeln.
+    wa4-erdat = wa1-erdat.
+    wa4-ernam = wa1-ernam.
+    wa4-posnr = wa2-posnr.
+    wa4-matnr = wa2-matnr.
+    wa4-arktx = wa2-arktx.
+    wa4-netwr = wa2-netwr.
+    wa4-parvw = wa3-parvw.
+    APPEND wa4 TO itab4.
+
+    CLEAR:wa1, wa2, wa3, wa4.
+
+  ENDLOOP.
+
+if r1 = 'X'.
+
+sort itab4 by netwr ASCENDING.
+  LOOP AT itab4 INTO wa4.
+
+    WRITE: / wa4-vbeln, wa4-erdat, wa4-ernam, wa4-posnr, wa4-matnr, wa4-arktx, wa4-netwr, wa4-parvw.
+  ENDLOOP.
+ENDIF.
+
+if r2 = 'X'.
+
+  sort itab4 by netwr DESCENDING.
+  LOOP AT itab4 INTO wa4.
+
+    WRITE: / wa4-vbeln, wa4-erdat, wa4-ernam, wa4-posnr, wa4-matnr, wa4-arktx, wa4-netwr, wa4-parvw.
+  ENDLOOP.
+ENDIF.
