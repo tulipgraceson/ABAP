@@ -96,3 +96,361 @@ if r2 = 'X'.
     WRITE: / wa4-vbeln, wa4-erdat, wa4-ernam, wa4-posnr, wa4-matnr, wa4-arktx, wa4-netwr, wa4-parvw.
   ENDLOOP.
 ENDIF.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+*&---------------------------------------------------------------------*
+*& Report ZINVOICEGRIDASG_TUL
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zinvoicegridasg_tul.
+
+DATA: it_fcat TYPE slis_t_fieldcat_alv,
+      wa_fcat TYPE slis_fieldcat_alv,
+      it_gcat TYPE slis_t_fieldcat_alv,
+      wa_gcat TYPE slis_fieldcat_alv.
+
+TYPES: BEGIN OF ty_bkpf,
+         bukrs TYPE char4,
+         belnr TYPE char10,
+         gjahr TYPE gjahr,
+         blart TYPE char2,
+         bldat TYPE bldat,
+       END OF ty_bkpf.
+
+DATA: itab1 TYPE TABLE OF ty_bkpf,
+      wa1   TYPE ty_bkpf.
+
+TYPES: BEGIN OF ty_bseg,
+         belnr TYPE char10,
+         gjahr TYPE gjahr,
+         buzei TYPE buzei,
+         buzid TYPE char1,
+         augdt TYPE augdt,
+       END OF ty_bseg.
+
+DATA: itab2 TYPE TABLE OF ty_bseg,
+      wa2   TYPE ty_bseg.
+
+TYPES: BEGIN OF ty_bsik,
+         belnr TYPE char10,
+         gjahr TYPE gjahr,
+         lifnr TYPE lifnr,
+         waers TYPE waers,
+         xblnr TYPE xblnr,
+       END OF ty_bsik.
+
+DATA: itab3 TYPE TABLE OF ty_bsik,
+      wa3   TYPE ty_bsik.
+
+TYPES: BEGIN OF ty_invo,
+*         bukrs TYPE char4,
+         belnr TYPE char10,
+         gjahr TYPE gjahr,
+*         blart TYPE char2,
+*         bldat TYPE bldat,
+         buzei TYPE buzei,
+         buzid TYPE char1,
+         augdt TYPE augdt,
+         lifnr TYPE lifnr,
+         waers TYPE waers,
+         xblnr TYPE xblnr,
+       END OF ty_invo.
+
+DATA: itab4 TYPE TABLE OF ty_invo,
+      wa4   TYPE ty_invo.
+
+
+SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME.
+  TABLES bkpf.
+  SELECT-OPTIONS docid FOR bkpf-belnr.
+
+  PARAMETERS year TYPE gjahr.
+
+SELECTION-SCREEN END OF BLOCK b1.
+
+wa_fcat-col_pos = 1.
+wa_fcat-seltext_m = 'Document ID'.
+wa_fcat-fieldname = 'BELNR'.
+APPEND wa_fcat TO it_fcat.
+CLEAR wa_fcat.
+
+wa_fcat-col_pos = 2.
+wa_fcat-seltext_m = 'Company code'.
+wa_fcat-fieldname = 'BUKRS'.
+APPEND wa_fcat TO it_fcat.
+CLEAR wa_fcat.
+
+wa_fcat-col_pos = 3.
+wa_fcat-seltext_m = 'Year'.
+wa_fcat-fieldname = 'gjahr'.
+APPEND wa_fcat TO it_fcat.
+CLEAR wa_fcat.
+
+wa_fcat-col_pos = 4.
+wa_fcat-seltext_m = 'Document Type'.
+wa_fcat-fieldname = 'blart'.
+APPEND wa_fcat TO it_fcat.
+CLEAR wa_fcat.
+
+wa_fcat-col_pos = 5.
+wa_fcat-seltext_m = 'Document date'.
+wa_fcat-fieldname = 'bldat'.
+APPEND wa_fcat TO it_fcat.
+CLEAR wa_fcat.
+
+
+
+
+wa_gcat-col_pos = 1.
+wa_gcat-seltext_m = 'Document ID'.
+wa_gcat-fieldname = 'BELNR'.
+APPEND wa_gcat TO it_gcat.
+CLEAR wa_gcat.
+
+wa_gcat-col_pos = 2.
+wa_gcat-seltext_m = 'Year'.
+wa_gcat-fieldname = 'GJAHR'.
+APPEND wa_gcat TO it_gcat.
+CLEAR wa_gcat.
+
+wa_gcat-col_pos = 3.
+wa_gcat-seltext_m = 'number of line item'.
+wa_gcat-fieldname = 'BUZEI'.
+APPEND wa_gcat TO it_gcat.
+CLEAR wa_gcat.
+
+wa_gcat-col_pos = 4.
+wa_gcat-seltext_m = 'Line Item'.
+wa_gcat-fieldname = 'BUZID'.
+APPEND wa_gcat TO it_gcat.
+CLEAR wa_gcat.
+
+wa_gcat-col_pos = 5.
+wa_gcat-seltext_m = 'Clearing date'.
+wa_gcat-fieldname = 'AUGDT'.
+APPEND wa_gcat TO it_gcat.
+CLEAR wa_gcat.
+
+wa_gcat-col_pos = 6.
+wa_gcat-seltext_m = 'Supplier Accnt No.'.
+wa_gcat-fieldname = 'LIFNR'.
+APPEND wa_gcat TO it_gcat.
+CLEAR wa_gcat.
+
+wa_gcat-col_pos = 7.
+wa_gcat-seltext_m = 'Currency Key'.
+wa_gcat-fieldname = 'WAERS'.
+APPEND wa_gcat TO it_gcat.
+CLEAR wa_gcat.
+
+wa_gcat-col_pos = 8.
+wa_gcat-seltext_m = 'Document Ref. NO'.
+wa_gcat-fieldname = 'XBLNR'.
+APPEND wa_gcat TO it_gcat.
+CLEAR wa_gcat.
+
+*bukrs bldat blart
+
+SELECT bukrs belnr gjahr blart bldat FROM bkpf INTO TABLE itab1 WHERE belnr IN docid AND gjahr = year.
+
+IF sy-subrc = 0.
+
+  CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+    EXPORTING
+*     I_INTERFACE_CHECK       = ' '
+*     I_BYPASSING_BUFFER      = ' '
+*     I_BUFFER_ACTIVE         = ' '
+      i_callback_program      = sy-repid
+*     I_CALLBACK_PF_STATUS_SET          = ' '
+      i_callback_user_command = 'SECOND'
+*     I_CALLBACK_TOP_OF_PAGE  = ' '
+*     I_CALLBACK_HTML_TOP_OF_PAGE       = ' '
+*     I_CALLBACK_HTML_END_OF_LIST       = ' '
+*     I_STRUCTURE_NAME        =
+*     I_BACKGROUND_ID         = ' '
+*     I_GRID_TITLE            =
+*     I_GRID_SETTINGS         =
+*     IS_LAYOUT               =
+      it_fieldcat             = it_fcat
+*     IT_EXCLUDING            =
+*     IT_SPECIAL_GROUPS       =
+*     IT_SORT                 =
+*     IT_FILTER               =
+*     IS_SEL_HIDE             =
+*     I_DEFAULT               = 'X'
+*     I_SAVE                  = ' '
+*     IS_VARIANT              =
+*     IT_EVENTS               =
+*     IT_EVENT_EXIT           =
+*     IS_PRINT                =
+*     IS_REPREP_ID            =
+*     I_SCREEN_START_COLUMN   = 0
+*     I_SCREEN_START_LINE     = 0
+*     I_SCREEN_END_COLUMN     = 0
+*     I_SCREEN_END_LINE       = 0
+*     I_HTML_HEIGHT_TOP       = 0
+*     I_HTML_HEIGHT_END       = 0
+*     IT_ALV_GRAPHICS         =
+*     IT_HYPERLINK            =
+*     IT_ADD_FIELDCAT         =
+*     IT_EXCEPT_QINFO         =
+*     IR_SALV_FULLSCREEN_ADAPTER        =
+*     O_PREVIOUS_SRAL_HANDLER =
+*   IMPORTING
+*     E_EXIT_CAUSED_BY_CALLER =
+*     ES_EXIT_CAUSED_BY_USER  =
+    TABLES
+      t_outtab                = itab1
+*   EXCEPTIONS
+*     PROGRAM_ERROR           = 1
+*     OTHERS                  = 2
+    .
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+ENDIF.
+FORM second USING c LIKE sy-ucomm
+      d TYPE slis_selfield.
+
+  READ TABLE itab1 INTO wa1 INDEX d-tabindex.
+  IF sy-subrc = 0.
+
+
+*  SELECT belnr gjahr buzei buzid augdt FROM bseg INTO TABLE itab2 WHERE belnr = wa1-belnr.
+    SELECT belnr gjahr buzei buzid augdt FROM bseg INTO TABLE itab2
+  WHERE belnr = wa1-belnr.
+    IF sy-subrc = 0.
+
+      LOOP AT itab2 INTO wa2.
+        READ TABLE itab1 INTO wa1 WITH KEY belnr = wa2-belnr.
+        IF sy-subrc = 0.
+          READ TABLE itab2 INTO wa2 WITH KEY belnr = wa3-belnr.
+          IF sy-subrc = 0.
+
+*  wa4-bukrs = wa1-bukrs.
+*  wa4-blart = wa1-blart.
+*  wa4-bldat = wa4-bldat.
+            wa4-belnr = wa2-belnr.
+            wa4-gjahr = wa2-gjahr.
+            wa4-buzei = wa2-buzei.
+            wa4-buzid = wa2-buzid.
+            wa4-augdt = wa2-augdt.
+            wa4-lifnr = wa3-lifnr.
+            wa4-waers = wa3-waers.
+            wa4-xblnr = wa3-xblnr.
+
+            APPEND wa4 TO itab4.
+
+            CLEAR:wa1, wa2, wa3.
+          ENDIF.
+        ENDIF.
+      ENDLOOP.
+
+
+
+      CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+        EXPORTING
+*         I_INTERFACE_CHECK                 = ' '
+*         I_BYPASSING_BUFFER                = ' '
+*         I_BUFFER_ACTIVE                   = ' '
+*         I_CALLBACK_PROGRAM                = ''
+*         I_CALLBACK_PF_STATUS_SET          = ' '
+*         I_CALLBACK_USER_COMMAND           = ' '
+*         I_CALLBACK_TOP_OF_PAGE            = ' '
+*         I_CALLBACK_HTML_TOP_OF_PAGE       = ' '
+*         I_CALLBACK_HTML_END_OF_LIST       = ' '
+*         I_STRUCTURE_NAME                  =
+*         I_BACKGROUND_ID                   = ' '
+*         I_GRID_TITLE                      =
+*         I_GRID_SETTINGS                   =
+*         IS_LAYOUT   =
+          it_fieldcat = it_gcat
+*         IT_EXCLUDING                      =
+*         IT_SPECIAL_GROUPS                 =
+*         IT_SORT     =
+*         IT_FILTER   =
+*         IS_SEL_HIDE =
+*         I_DEFAULT   = 'X'
+*         I_SAVE      = ' '
+*         IS_VARIANT  =
+*         IT_EVENTS   =
+*         IT_EVENT_EXIT                     =
+*         IS_PRINT    =
+*         IS_REPREP_ID                      =
+*         I_SCREEN_START_COLUMN             = 0
+*         I_SCREEN_START_LINE               = 0
+*         I_SCREEN_END_COLUMN               = 0
+*         I_SCREEN_END_LINE                 = 0
+*         I_HTML_HEIGHT_TOP                 = 0
+*         I_HTML_HEIGHT_END                 = 0
+*         IT_ALV_GRAPHICS                   =
+*         IT_HYPERLINK                      =
+*         IT_ADD_FIELDCAT                   =
+*         IT_EXCEPT_QINFO                   =
+*         IR_SALV_FULLSCREEN_ADAPTER        =
+*         O_PREVIOUS_SRAL_HANDLER           =
+*     IMPORTING
+*         E_EXIT_CAUSED_BY_CALLER           =
+*         ES_EXIT_CAUSED_BY_USER            =
+        TABLES
+          t_outtab    = itab2
+*     EXCEPTIONS
+*         PROGRAM_ERROR                     = 1
+*         OTHERS      = 2
+        .
+      IF sy-subrc <> 0.
+* Implement suitable error handling here
+      ENDIF.
+
+
+    ENDIF.
+
+  ENDIF.
+ENDFORM.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
